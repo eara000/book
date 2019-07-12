@@ -11,8 +11,8 @@
 		<!--标准mui.css-->
 		<link rel="stylesheet" href="css/mui.min.css">
 		<!--App自定义的css-->
-		<link rel="stylesheet" type="text/css" href="css/app.css"/>
-		<link href="css/my.css" rel="stylesheet"/>
+		<link rel="stylesheet" type="text/css" href="css/app.css" />
+		<link href="css/my.css" rel="stylesheet" />
 		<link rel="icon" href="images/ico.png" />
 		<style>
 			.title {
@@ -56,7 +56,8 @@
 					</div>
 					<ul class="mui-table-view bc2" id="chapterList" style="font-size: 16px;">
 					</ul>
-					<div id="load" class="title" align="center"><hr>加载更多</div>
+					<div id="load" class="title" align="center">
+						<hr>加载更多</div>
 				</div>
 			</div>
 		</div>
@@ -73,154 +74,153 @@
 		var next = 1;
 		var sort = 'asc';
 		mui.init();
-		document.body.querySelector('#update').addEventListener('tap',function(){  
+		document.body.querySelector('#update').addEventListener('tap', function() {
 			update();
 		});
-		document.body.querySelector('#asc').addEventListener('tap',function(){  
+		document.body.querySelector('#asc').addEventListener('tap', function() {
 			sortChange('asc')
 		});
-		document.body.querySelector('#desc').addEventListener('tap',function(){  
+		document.body.querySelector('#desc').addEventListener('tap', function() {
 			sortChange('desc')
 		});
-		
+
 		/* mui.plusReady(function(){
 			id = plus.webview.currentWebview().num;
 			init();
 		}); */
-		mui.ready(function(){
+		mui.ready(function() {
 			var url = window.location.href;
-			id = url.substr(url.indexOf('num=')+4);
+			id = url.substr(url.indexOf('num=') + 4);
 			init();
 		});
-		
-		document.body.querySelector('#load').addEventListener('tap',function(){  
+
+		document.body.querySelector('#load').addEventListener('tap', function() {
 			more();
 		});
-		
-		
-		function init(){
-			mui.ajax(config.config.path + "/book/" + id,{
-				type:"GET",
-				dataType:"json",
-				success:function(result){
+
+
+		function init() {
+			mui.ajax(config.config.path + "/book/" + id, {
+				type: "GET",
+				dataType: "json",
+				success: function(result) {
 					var code = result.code;
-					if(code == 200){
+					if (code == 200) {
 						id = result.data.id;
 						bookNumber = result.data.number;
 						bookName = result.data.name;
-						document.getElementById("title").innerHTML=result.data.name;
-						document.getElementById("name").innerHTML=result.data.name;
-						document.getElementById("descs").innerHTML="<br><p>"+result.data.synopsis+"</p>";
-						document.getElementById("author").innerHTML=result.data.author;
-						document.getElementById("clickNum").innerHTML=result.data.clickNum;
-						document.getElementById("starNum").innerHTML=result.data.starNum;
-						document.getElementById("updateTime").innerHTML=new Date(result.data.updateTime).Format("yyyy-MM-dd hh:mm:ss");
+						document.getElementById("title").innerHTML = result.data.name;
+						document.getElementById("name").innerHTML = result.data.name;
+						document.getElementById("descs").innerHTML = "<br><p>" + result.data.synopsis + "</p>";
+						document.getElementById("author").innerHTML = result.data.author;
+						document.getElementById("clickNum").innerHTML = result.data.clickNum;
+						document.getElementById("starNum").innerHTML = result.data.starNum;
+						document.getElementById("updateTime").innerHTML = new Date(result.data.updateTime).Format(
+							"yyyy-MM-dd hh:mm:ss");
 						page();
 					}
 				}
 			});
 		}
-		
-		function page(){
-			mui.ajax(config.config.path + "/chapter/page?limit="+config.config.chapterPageSize+"&page=1&sort="+sort+"&sort_column=id&bookNumber=" + bookNumber,{
-				type:"GET",
-				dataType:"json",
-				success:function(result){
-					var code = result.code;
-					if(code == 200){
-						var table = document.body.querySelector('#chapterList');
-						table.innerHTML = "";
-						for (j = 0, len = result.data.records.length; j < len; j++) {
-							var html =result.data.records[j].title;
-							var div = document.createElement('li');
-							div.className = "mui-table-view-cell";
-							var bid = result.data.records[j].id;
-// 							div.addEventListener('tap',function(){  
-// 								chapter(bid,bookName);
-// 							});
-							(function(bid,bookName){
-								div.onclick = function(){
-									chapter(bid,bookName);
-								};
-							})(bid,bookName);
-							div.innerHTML = html;
-							table.appendChild(div);
+
+		function page() {
+			mui.ajax(config.config.path + "/chapter/page?limit=" + config.config.chapterPageSize + "&page=1&sort=" + sort +
+				"&sort_column=id&bookNumber=" + bookNumber, {
+					type: "GET",
+					dataType: "json",
+					success: function(result) {
+						var code = result.code;
+						if (code == 200) {
+							var table = document.body.querySelector('#chapterList');
+							table.innerHTML = "";
+							for (j = 0, len = result.data.records.length; j < len; j++) {
+								var html = result.data.records[j].title;
+								var div = document.createElement('li');
+								div.className = "mui-table-view-cell";
+								var bid = result.data.records[j].id;
+								// 							div.addEventListener('tap',function(){  
+								// 								chapter(bid,bookName);
+								// 							});
+								(function(bid, bookName) {
+									div.onclick = function() {
+										chapter(bid, bookName);
+									};
+								})(bid, bookName);
+								div.innerHTML = html;
+								table.appendChild(div);
+							}
+							next = 2;
 						}
-						next = 2;
 					}
-				}
-			});
+				});
 		}
-		
-		function update(){
+
+		function update() {
 			var ele = document.getElementById("update");
-			ele.addEventListener('tap',function(){  
-			});
-			ele.innerHTML='<span class="mui-spinner"></span>';
-			mui.ajax(config.config.path + "/book/update/"+id,{
-				type:"GET",
-				dataType:"json",
-				success:function(result){
+			ele.addEventListener('tap', function() {});
+			ele.innerHTML = '<span class="mui-spinner"></span>';
+			mui.ajax(config.config.path + "/book/update/" + id, {
+				type: "GET",
+				dataType: "json",
+				success: function(result) {
 					console.log(result);
 					var code = result.code;
-					if(code == 200){
+					if (code == 200) {
 						init();
-						mui.toast('更新了'+result.data+'章哦^o^', {
+						mui.toast('更新了' + result.data + '章哦^o^', {
 							duration: 'short',
 							type: 'div'
 						})
-					}else if(code == 204){
+					} else if (code == 204) {
 						mui.toast('还未更新0.0', {
 							duration: 'short',
 							type: 'div'
 						})
 					}
-					ele.addEventListener('tap',function(){  
+					ele.addEventListener('tap', function() {
 						update();
 					});
-					ele.innerHTML='<span class="mui-icon mui-icon-reload"></span>更新';
+					ele.innerHTML = '<span class="mui-icon mui-icon-reload"></span>更新';
 				}
 			});
 		}
-		
-		
-		
+
+
+
 		function more() {
-			mui.ajax(config.config.path + "/chapter/page?limit="+config.config.chapterPageSize+"&page="+next+"&sort="+sort+"&sort_column=id&bookNumber=" + bookNumber,{
-				type:"GET",
-				dataType:"json",
-				success:function(result){
-					var code = result.code;
-					if(code == 200){
-						var table = document.body.querySelector('#chapterList');
-						if (result.data.records.length > 0) {
-							for (j = 0, len = result.data.records.length; j < len; j++) {
-								var html =result.data.records[j].title;
-								var div = document.createElement('li');
-								div.className = "mui-table-view-cell";
-								var bid = result.data.records[j].id;
-								// div.addEventListener('tap',function(){  
-								// 	chapter(bid,bookName);
-								// });
-								(function(bid,bookName){
-									div.onclick = function(){
-										chapter(bid,bookName);
-									};
-								})(bid,bookName);
-								div.innerHTML = html;
-								table.appendChild(div);
+			mui.ajax(config.config.path + "/chapter/page?limit=" + config.config.chapterPageSize + "&page=" + next + "&sort=" +
+				sort + "&sort_column=id&bookNumber=" + bookNumber, {
+					type: "GET",
+					dataType: "json",
+					success: function(result) {
+						var code = result.code;
+						if (code == 200) {
+							var table = document.body.querySelector('#chapterList');
+							if (result.data.records.length > 0) {
+								for (j = 0, len = result.data.records.length; j < len; j++) {
+									var html = result.data.records[j].title;
+									var div = document.createElement('li');
+									div.className = "mui-table-view-cell";
+									var bid = result.data.records[j].id;
+									(function(bid, bookName) {
+										div.onclick = function() {
+											chapter(bid, bookName);
+										};
+									})(bid, bookName);
+									div.innerHTML = html;
+									table.appendChild(div);
+								}
+								next++;
+							} else {
+								document.body.querySelector('#load').innerHTML = "<hr>没有更多数据了";
+								document.body.querySelector('#load').addEventListener('tap', null);
 							}
-							next++;
-						} else {
-							document.body.querySelector('#load').innerHTML = "<hr>没有更多数据了";
-							document.body.querySelector('#load').addEventListener('tap',null);
 						}
 					}
-				}
-			});
+				});
 		}
-		
-		function sortChange(str){
+
+		function sortChange(str) {
 			sort = str;
 			page();
 		}
