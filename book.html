@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<!--标准mui.css-->
+		<link rel="stylesheet" href="css/mui.min.css">
+		<!--App自定义的css-->
+		<link rel="stylesheet" type="text/css" href="css/app.css"/>
+		<link href="css/my.css" rel="stylesheet"/>
+		<link rel="icon" href="images/ico.png" />
+		<style>
+			.title {
+				margin: 20px 15px 10px;
+				color: #6d6d72;
+				font-size: 15px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav bc2">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title" id="title"></h1>
+		</header>
+		<div class="mui-content bc">
+			<div class="mui-card bc2">
+				<div class="mui-card-content">
+					<div class="mui-card-content-inner">
+						<a style="float:right;" id="update"><span class="mui-icon mui-icon-reload"></span>更新</a>
+						<h4 id="name"></h4>
+						<hr>
+						<span>作者：<span id="author"></span></span>
+						<br>
+						<span>人气：<span id="clickNum"></span></span>
+						<br>
+						<span>收藏：<span id="starNum"></span></span>
+						<br>
+						<span>最后更新：<a><span id="updateTime"></span></a></span>
+						<br>
+						<span>简介：<span id="descs" style="text-indent:2em;"></span></span>
+					</div>
+				</div>
+			</div>
+			<div class="mui-card bc2">
+				<div class="mui-card-content">
+					<div class="title">
+						章节列表
+						<div style="float: right;"><a id="asc">正序</a>&nbsp;&nbsp;<a id="desc">倒序</a></div>
+						<hr>
+					</div>
+					<ul class="mui-table-view bc2" id="chapterList" style="font-size: 16px;">
+					</ul>
+					<div id="load" class="title" align="center"><hr>加载更多</div>
+				</div>
+			</div>
+		</div>
+
+	</body>
+	<script src="js/mui.min.js"></script>
+	<script src="js/config.js"></script>
+	<script src="js/Date.js"></script>
+	<script src="js/book.js"></script>
+	<script>
+		var bookNumber;
+		var id;
+		var bookName;
+		var next = 1;
+		var sort = 'asc';
+		mui.init({
+			pullRefresh: {
+				container: 'asd', //待刷新区域标识，querySelector能定位的css选择器均可，比如：id、.class等
+				up: {
+					height: 50, //可选.默认50.触发上拉加载拖动距离
+					auto: false, //可选,默认false.自动上拉加载一次
+					contentrefresh: "正在加载", //可选，正在加载状态时，上拉加载控件上显示的标题内容
+					contentnomore: '没有更多数据了', //可选，请求完毕若没有更多数据时显示的提醒内容；
+					callback: more //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+				}
+			}
+		});
+		document.body.querySelector('#update').addEventListener('tap',function(){  
+			update();
+		});
+		document.body.querySelector('#asc').addEventListener('tap',function(){  
+			sortChange('asc')
+		});
+		document.body.querySelector('#desc').addEventListener('tap',function(){  
+			sortChange('desc')
+		});
+		
+		/* mui.plusReady(function(){
+			id = plus.webview.currentWebview().num;
+			init();
+		}); */
+		mui.ready(function(){
+			var url = window.location.href;
+			id = url.substr(url.indexOf('num=')+4);
+			init();
+		});
+		
+		document.body.querySelector('#load').addEventListener('tap',function(){  
+			more();
+		});
+		
+		
+		function init(){
+			mui.ajax(config.config.path + "/book/" + id,{
+				type:"GET",
+				dataType:"json",
+				success:function(result){
+					var code = result.code;
+					if(code == 200){
+						id = result.data.id;
+						bookNumber = result.data.number;
+						bookName = result.data.name;
+						document.getElementById("title").innerHTML=result.data.name;
+						document.getElementById("name").innerHTML=result.data.name;
+						document.getElementById("descs").innerHTML="<br><p>"+result.data.synopsis+"</p>";
+						document.getElementById("author").innerHTML=result.data.author;
+						document.getElementById("clickNum").innerHTML=result.data.clickNum;
+						document.getElementById("starNum").innerHTML=result.data.starNum;
+						document.getElementById("updateTime").innerHTML=new Date(result.data.updateTime).Format("yyyy-MM-dd hh:mm:ss");
+						page();
+					}
+				}
+			});
+		}
+		
+		function page(){
+			mui.ajax(config.config.path + "/chapter/page?limit="+config.config.chapterPageSize+"&page=1&sort="+sort+"&sort_column=id&bookNumber=" + bookNumber,{
+				type:"GET",
+				dataType:"json",
+				success:function(result){
+					var code = result.code;
+					if(code == 200){
+						var table = document.body.querySelector('#chapterList');
+						table.innerHTML = "";
+						for (j = 0, len = result.data.records.length; j < len; j++) {
+							var html =result.data.records[j].title;
+							var div = document.createElement('li');
+							div.className = "mui-table-view-cell";
+							var bid = result.data.records[j].id;
+							div.addEventListener('tap',function(){  
+								chapter(bid,bookName);
+							});
+							// (function(bid,bookName){
+							// 	div.onclick = function(){
+							// 		chapter(bid,bookName);
+							// 	};
+							// })(bid,bookName);
+							div.innerHTML = html;
+							table.appendChild(div);
+						}
+						next = 2;
+					}
+				}
+			});
+		}
+		
+		function update(){
+			var ele = document.getElementById("update");
+			ele.addEventListener('tap',function(){  
+			});
+			ele.innerHTML='<span class="mui-spinner"></span>';
+			mui.ajax(config.config.path + "/book/update/"+id,{
+				type:"GET",
+				dataType:"json",
+				success:function(result){
+					console.log(result);
+					var code = result.code;
+					if(code == 200){
+						init();
+						mui.toast('更新了'+result.data+'章哦^o^', {
+							duration: 'short',
+							type: 'div'
+						})
+					}else if(code == 204){
+						mui.toast('还未更新0.0', {
+							duration: 'short',
+							type: 'div'
+						})
+					}
+					ele.addEventListener('tap',function(){  
+						update();
+					});
+					ele.innerHTML='<span class="mui-icon mui-icon-reload"></span>更新';
+				}
+			});
+		}
+		
+		
+		
+		function more() {
+			mui.ajax(config.config.path + "/chapter/page?limit="+config.config.chapterPageSize+"&page="+next+"&sort="+sort+"&sort_column=id&bookNumber=" + bookNumber,{
+				type:"GET",
+				dataType:"json",
+				success:function(result){
+					var code = result.code;
+					if(code == 200){
+						var table = document.body.querySelector('#chapterList');
+						if (result.data.records.length > 0) {
+							for (j = 0, len = result.data.records.length; j < len; j++) {
+								var html =result.data.records[j].title;
+								var div = document.createElement('li');
+								div.className = "mui-table-view-cell";
+								var bid = result.data.records[j].id;
+								div.addEventListener('tap',function(){  
+									chapter(bid,bookName);
+								});
+								div.innerHTML = html;
+								table.appendChild(div);
+							}
+							next++;
+						} else {
+							document.body.querySelector('#load').innerHTML = "<hr>没有更多数据了";
+							document.body.querySelector('#load').addEventListener('tap',null);
+						}
+					}
+				}
+			});
+		}
+		
+		function sortChange(str){
+			sort = str;
+			page();
+		}
+	</script>
+</html>
